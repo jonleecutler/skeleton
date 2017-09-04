@@ -1,6 +1,5 @@
 package api;
 
-
 import io.dropwizard.jersey.validation.Validators;
 import org.junit.Test;
 
