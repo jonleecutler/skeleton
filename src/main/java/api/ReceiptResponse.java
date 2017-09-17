@@ -2,8 +2,13 @@ package api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import generated.tables.records.ReceiptsRecord;
+import generated.tables.records.TagsRecord;
 
 import java.math.BigDecimal;
+import java.sql.Time;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * This is an API Object.  Its purpose is to model the JSON API that we expose.
@@ -19,14 +24,22 @@ public class ReceiptResponse {
     Integer id;
 
     @JsonProperty
+    Time created;
+
+    @JsonProperty
     String merchant;
 
     @JsonProperty
     BigDecimal amount;
 
-    public ReceiptResponse(ReceiptsRecord dbRecord) {
-        this.id = dbRecord.getId();
-        this.merchant = dbRecord.getMerchant();
-        this.amount = dbRecord.getAmount();
+    @JsonProperty
+    List<String> tags;
+
+    public ReceiptResponse(ReceiptsRecord dbReceipt, List<TagsRecord> dbTags) {
+        this.id = dbReceipt.getId();
+        this.created = dbReceipt.getUploaded();
+        this.merchant = dbReceipt.getMerchant();
+        this.amount = dbReceipt.getAmount();
+        this.tags = dbTags.stream().map(TagsRecord::getTag).collect(toList());
     }
 }

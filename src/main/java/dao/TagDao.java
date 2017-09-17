@@ -24,6 +24,13 @@ public class TagDao {
                 .fetch();
     }
 
+    public List<TagsRecord> get(int receiptId) {
+        return dsl
+                .selectFrom(TAGS)
+                .where(TAGS.RECEIPT_ID.eq(receiptId))
+                .fetch();
+    }
+
     public void toggle(int receiptId, String tag) {
         TagsRecord tagsRecord = dsl
                 .selectFrom(TAGS)

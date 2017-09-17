@@ -2,7 +2,9 @@ package api;
 
 import controllers.ReceiptController;
 import dao.ReceiptDao;
+import dao.TagDao;
 import generated.tables.records.ReceiptsRecord;
+import generated.tables.records.TagsRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,8 +18,9 @@ public class ReceiptControllerTest {
     @Test
     public void testGetReceiptsEmpty() {
         ReceiptDao receiptDaoMock = mock(ReceiptDao.class);
+        TagDao tagDaoMock = mock(TagDao.class);
 
-        ReceiptController receiptController = new ReceiptController(receiptDaoMock);
+        ReceiptController receiptController = new ReceiptController(receiptDaoMock, tagDaoMock);
 
         Assert.assertEquals(new ArrayList<String>(), receiptController.getReceipts());
     }
@@ -25,9 +28,14 @@ public class ReceiptControllerTest {
     @Test
     public void testGetReceiptsValid() {
         ReceiptDao receiptDaoMock = mock(ReceiptDao.class);
-        when(receiptDaoMock.get()).thenReturn(asList(new ReceiptsRecord()));
+        TagDao tagDaoMock = mock(TagDao.class);
 
-        ReceiptController receiptController = new ReceiptController(receiptDaoMock);
+        ReceiptsRecord record = new ReceiptsRecord();
+        record.setId(1);
+        when(receiptDaoMock.get()).thenReturn(asList(record));
+        when(tagDaoMock.get(any())).thenReturn(new ArrayList<>());
+
+        ReceiptController receiptController = new ReceiptController(receiptDaoMock, tagDaoMock);
 
         Assert.assertEquals(1, receiptController.getReceipts().size());
     }

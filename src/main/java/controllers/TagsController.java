@@ -10,6 +10,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -28,10 +29,15 @@ public class TagsController {
     @GET
     @Path("/{tag}")
     public List<ReceiptResponse> getTags(@PathParam("tag") String tag) {
-        List<TagsRecord> tagRecords = tags.get(tag);
-        List<Integer> receiptIds = tagRecords.stream().map(TagsRecord::getReceiptId).collect(toList());
-        List<ReceiptsRecord> receiptRecords = receipts.get(receiptIds);
-        return receiptRecords.stream().map(ReceiptResponse::new).collect(toList());
+        List<TagsRecord> selectedTags = tags.get(tag);
+        List<Integer> receiptIds = selectedTags.stream().map(TagsRecord::getReceiptId).collect(toList());
+
+        List<ReceiptResponse> receiptResponses = new ArrayList<>();
+        for (ReceiptsRecord receiptRecord : receipts.get(receiptIds)) {
+            receiptResponses.add(new ReceiptResponse(receiptRecord, tags.get(receiptRecord.getId())));
+        }
+
+        return receiptResponses;
     }
 
     @PUT

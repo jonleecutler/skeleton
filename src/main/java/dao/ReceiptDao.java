@@ -18,7 +18,9 @@ public class ReceiptDao {
         this.dsl = DSL.using(jooqConfig);
     }
 
-    public List<ReceiptsRecord> get() { return dsl.selectFrom(RECEIPTS).fetch(); }
+    public List<ReceiptsRecord> get() {
+        return dsl.selectFrom(RECEIPTS).fetch();
+    }
 
     public ReceiptsRecord get(int id) {
         return dsl
