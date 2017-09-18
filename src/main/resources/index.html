@@ -155,7 +155,7 @@
         }
 
         function saveTag() {
-            const api = "http://ec2-18-221-97-102.us-east-2.compute.amazonaws.com";
+            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
 
             var tag = document.getElementById("tagValue").value;
             var receiptId = document.getElementById("receiptId").value;
@@ -190,7 +190,7 @@
         }
 
         function toggleTag(tag, receiptId) {
-            const api = "http://ec2-18-221-97-102.us-east-2.compute.amazonaws.com";
+            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
 
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
@@ -207,7 +207,7 @@
         }
 
         function getReceipts() {
-            const api = "http://ec2-18-221-97-102.us-east-2.compute.amazonaws.com";
+            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
 
             $.getJSON(api + "/receipts", function(receipts){
                 for(var i=receipts.length - 1; i >= 0; i--) {
@@ -219,14 +219,15 @@
                     }
 
                     $(`<div id="receipt-${receipt.id}", class="receipt">
-                        <div class="time">${receipt.created}</div>
-                        <div class="merchant">${receipt.merchant}</div>
-                        <div class="amount">${receipt.amount}</div>
-                        <div id="tags-${receipt.id}" class="tags">
-                            <button class="addTag", onClick="addTag(${receipt.id})">Add</button>
-                            ${tags}
-                        </div>
-                      </div>`).appendTo($("#receiptList"));
+              <div class="time">${receipt.created}</div>
+              <div class="merchant">${receipt.merchant}</div>
+              <div class="amount">${receipt.amount}</div>
+              <div id="tags-${receipt.id}" class="tags">
+                <button class="addTag", onClick="addTag(${receipt.id})">Add</button>
+                ${tags}
+              </div>
+            </div>`)
+                        .appendTo($("#receiptList"));
                 }
             })
         }
@@ -237,7 +238,7 @@
         }
 
         function saveReceipt() {
-            const api = "http://ec2-18-221-97-102.us-east-2.compute.amazonaws.com";
+            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
 
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
@@ -250,13 +251,13 @@
             var data = JSON.stringify({ merchant: `${merchant}`, amount: `${amount}` });
             $.post(api + "/receipts", data, function(response) {
                 $(`<div id="receipt-${response}", class="receipt">
-                    <div class="time">1s ago</div>
-                    <div class="merchant">${merchant}</div>
-                    <div class="amount">${amount}</div>
-                    <div id="tags-${response}", class="tags">
-                      <button class="addTag", onClick="addTag(${response})">Add</button>
-                    </div>
-                  </div>`).prependTo($("#receiptList"));
+            <div class="time">1s ago</div>
+            <div class="merchant">${merchant}</div>
+            <div class="amount">${amount}</div>
+            <div id="tags-${response}", class="tags">
+              <button class="addTag", onClick="addTag(${response})">Add</button>
+            </div>
+          </div>`).prependTo($("#receiptList"));
 
                 addMenu.style.visibility = 'hidden'
 
