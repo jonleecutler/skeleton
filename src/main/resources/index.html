@@ -36,7 +36,7 @@
             box-sizing: border-box;
         }
 
-        input[id=tagValue], select {
+        input[class=tag_input], select {
             width: 100%;
             padding: 12px 20px;
             margin: 8px 0;
@@ -46,17 +46,7 @@
             box-sizing: border-box;
         }
 
-        input[id=receiptId], select {
-            width: 100%;
-            padding: 12px 20px;
-            margin: 8px 0;
-            display: inline-block;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .button{
+        #add-receipt{
             background-color:#FFA500;
             border: 5px solid #EEF;
             width: 100px;
@@ -66,7 +56,7 @@
             text-align: center;
         }
 
-        #save{
+        #save-receipt{
             background-color:#47A747;
             border: 5px solid #EEF;
             float: right;
@@ -75,7 +65,7 @@
             text-align: center;
         }
 
-        #cancel{
+        #cancel-receipt{
             background-color:#FF1919;
             border: 5px solid #EEF;
             float: left;
@@ -95,13 +85,6 @@
         }
 
         #addMenu {
-            overflow: hidden;
-            background-color:#FFA500;
-            clear: both;
-            visibility: hidden;
-        }
-
-        #tagMenu {
             overflow: hidden;
             background-color:#FFA500;
             clear: both;
@@ -135,10 +118,6 @@
             width: 25%;
         }
 
-        #save {
-
-        }
-
     </style>
     <script>
         // This is the idiomatic way to ensure that JQuery does not
@@ -148,17 +127,20 @@
         })
 
         function addTag(receiptId) {
-            var tagMenu = document.getElementById("tagMenu");
-            tagMenu.style.visibility = 'visible'
-
-            document.getElementById("receiptId").value = receiptId;
+            $(`<input id="tag-input-${receiptId}", class="tag_input" onkeyup="saveTag(event, ${receiptId})", placeholder="tag"/>`)
+            .appendTo(document.getElementById("receipt-" + receiptId));
         }
 
-        function saveTag() {
+        function saveTag(e, receiptId) {
             const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
+            
+            e.which = e.which || e.keyCode;
+            if(e.which != 13) {
+              return;
+            }
 
-            var tag = document.getElementById("tagValue").value;
-            var receiptId = document.getElementById("receiptId").value;
+            var tagInput = document.getElementById("tag-input-" + receiptId);
+            var tag = tagInput.value;
 
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
@@ -169,24 +151,12 @@
                 type: 'PUT',
                 data: JSON.stringify(receiptId),
                 success: function(response) {
-                    $(`<button id="tag-${receiptId}-${tag}", class="tag", onClick="toggleTag(\'${tag}\', ${receiptId})">${tag}</button>`)
-                        .appendTo(document.getElementById("tags-" + receiptId));
+                    $(`<button id="tag-${receiptId}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receiptId})">${tag}</button>`)
+                    .appendTo(document.getElementById("tags-" + receiptId));
+                    
+                    tagInput.remove();
                 }
             })
-
-            var tagMenu = document.getElementById("tagMenu");
-            tagMenu.style.visibility = 'hidden'
-
-            document.getElementById("tagValue").value = null;
-            document.getElementById("receiptId").value = null;
-        }
-
-        function cancelTag() {
-            var tagMenu = document.getElementById("tagMenu");
-            tagMenu.style.visibility = 'hidden'
-
-            document.getElementById("tagValue").value = null;
-            document.getElementById("receiptId").value = null;
         }
 
         function toggleTag(tag, receiptId) {
@@ -208,26 +178,25 @@
 
         function getReceipts() {
             const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-
+            
             $.getJSON(api + "/receipts", function(receipts){
                 for(var i=receipts.length - 1; i >= 0; i--) {
                     var receipt = receipts[i];
                     var tags = "";
                     for(var index in receipt.tags) {
                         var tag = receipt.tags[index];
-                        tags += `<button id="tag-${receipt.id}-${tag}", class="tag", onClick="toggleTag(\'${tag}\', ${receipt.id})">${tag}</button>`
+                        tags += `<button id="tag-${receipt.id}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receipt.id})">${tag}</button>`
                     }
 
                     $(`<div id="receipt-${receipt.id}", class="receipt">
-              <div class="time">${receipt.created}</div>
-              <div class="merchant">${receipt.merchant}</div>
-              <div class="amount">${receipt.amount}</div>
-              <div id="tags-${receipt.id}" class="tags">
-                <button class="addTag", onClick="addTag(${receipt.id})">Add</button>
-                ${tags}
-              </div>
-            </div>`)
-                        .appendTo($("#receiptList"));
+                        <div class="time">${receipt.created}</div>
+                        <div class="merchant">${receipt.merchant}</div>
+                        <div class="amount">${receipt.amount}</div>
+                        <div id="tags-${receipt.id}" class="tags">
+                          <button class="add-tag", onClick="addTag(${receipt.id})">Add</button>
+                          ${tags}
+                        </div>
+                      </div>`).appendTo($("#receiptList"));
                 }
             })
         }
@@ -239,7 +208,7 @@
 
         function saveReceipt() {
             const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-
+            
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
             });
@@ -251,13 +220,13 @@
             var data = JSON.stringify({ merchant: `${merchant}`, amount: `${amount}` });
             $.post(api + "/receipts", data, function(response) {
                 $(`<div id="receipt-${response}", class="receipt">
-            <div class="time">1s ago</div>
-            <div class="merchant">${merchant}</div>
-            <div class="amount">${amount}</div>
-            <div id="tags-${response}", class="tags">
-              <button class="addTag", onClick="addTag(${response})">Add</button>
-            </div>
-          </div>`).prependTo($("#receiptList"));
+                    <div class="time">1s ago</div>
+                    <div class="merchant">${merchant}</div>
+                    <div class="amount">${amount}</div>
+                    <div id="tags-${response}", class="tags">
+                      <button class="add-tag", onClick="addTag(${response})">Add</button>
+                    </div>
+                  </div>`).prependTo($("#receiptList"));
 
                 addMenu.style.visibility = 'hidden'
 
@@ -280,18 +249,12 @@
 <body>
 <DIV id="container">
     <h1>My receipts</h1>
-    <button class="button" onClick="addReceipt()">+</button>
+    <button id="add-receipt" onClick="addReceipt()">+</button>
     <div id="addMenu">
         <input id="merchant" placeholder="merchant"/>
         <input id="amount" placeholder="amount"/>
-        <button id="save" onClick="saveReceipt()">Save</button>
-        <button id="cancel" onClick="cancelReceipt()">Cancel</button>
-    </div>
-    <div id="tagMenu">
-        <input id="receiptId" placeholder=""/>
-        <input id="tagValue" placeholder="tag"/>
-        <button id="save" onClick="saveTag()">Save</button>
-        <button id="cancel" onClick="cancelTag()">Cancel</button>
+        <button id="save-receipt" onClick="saveReceipt()">Save</button>
+        <button id="cancel-receipt" onClick="cancelReceipt()">Cancel</button>
     </div>
     <div id="receiptListHeader">
         <h2>Time</h2>
