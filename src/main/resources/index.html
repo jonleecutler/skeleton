@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
-    
-    <head>
-        <link rel="stylesheet" href="style.css" />
-        <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-        <style>
-            #container {border: 1px solid blue;}
-            
+
+<head>
+    <link rel="stylesheet" href="style.css" />
+    <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <style>
+        #container {border: 1px solid blue;}
+
         H1 {
             float: left;
         }
-        
+
         H2 {
             float: left;
             width: 25%;
         }
-        
+
         input[id=merchant], select {
             width: 100%;
             padding: 12px 20px;
@@ -25,7 +25,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        
+
         input[id=amount], select {
             width: 100%;
             padding: 12px 20px;
@@ -35,7 +35,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        
+
         input[class=tag_input], select {
             width: 100%;
             padding: 12px 20px;
@@ -45,7 +45,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        
+
         #add-receipt {
             background-color:#FFA500;
             border: 5px solid #EEF;
@@ -55,7 +55,17 @@
             color: white;
             text-align: center;
         }
-        
+
+        #start-camera {
+            background-color:#FFA500;
+            border: 5px solid #EEF;
+            width: 100px;
+            float: right;
+            font-size: 2em;
+            color: white;
+            text-align: center;
+        }
+
         #save-receipt {
             background-color:#47A747;
             border: 5px solid #EEF;
@@ -64,7 +74,7 @@
             color: white;
             text-align: center;
         }
-        
+
         #cancel-receipt {
             background-color:#FF1919;
             border: 5px solid #EEF;
@@ -73,117 +83,117 @@
             color: white;
             text-align: center;
         }
-        
+
         #receiptListHeader {
             overflow: hidden;
             clear: both;
         }
-        
+
         #receiptList {
             overflow: hidden;
             clear: both;
         }
-        
+
         #addMenu {
             overflow: hidden;
             background-color:#FFA500;
             clear: both;
             visibility: hidden;
         }
-        
+
         .receipt {
             overflow: hidden;
             border: 1px solid blue;
             background-color: #EEF;
             margin-bottom: 5px;
         }
-        
+
         .time {
             float: left;
             width: 25%;
         }
-        
+
         .merchant {
             float: left;
             width: 25%;
         }
-        
+
         .amount {
             float: left;
             width: 25%;
         }
-        
+
         .tags {
             float: left;
             width: 25%;
         }
 
-        </style>
-        <script>
-            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
+    </style>
+    <script>
+        const api = "http://localhost:8080"; //"http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
 
-            // This is the idiomatic way to ensure that JQuery does not
-            // execute until the page has loaded
-            $(function() {
-                getReceipts();
-            })
-              
-            function addTag(receiptId) {
-                $(`<input id="tag-input-${receiptId}", class="tag_input" onkeyup="saveTag(event, ${receiptId})", placeholder="tag"/>`)
+        // This is the idiomatic way to ensure that JQuery does not
+        // execute until the page has loaded
+        $(function() {
+            getReceipts();
+        })
+
+        function addTag(receiptId) {
+            $(`<input id="tag-input-${receiptId}", class="tag_input" onkeyup="saveTag(event, ${receiptId})", placeholder="tag"/>`)
                 .appendTo(document.getElementById("receipt-" + receiptId));
+        }
+
+        function saveTag(e, receiptId) {
+            e.which = e.which || e.keyCode;
+            if(e.which != 13) {
+                return;
             }
-        
-            function saveTag(e, receiptId) {
-                e.which = e.which || e.keyCode;
-                if(e.which != 13) {
-                    return;
-                }
-            
-                var tagInput = document.getElementById("tag-input-" + receiptId);
-                var tag = tagInput.value;
-            
-                $.ajaxSetup({
-                    contentType: "application/json; charset=utf-8"
-                });
-                        
-                $.ajax({
-                    url: api + "/tags/" + tag,
-                    type: 'PUT',
-                    data: JSON.stringify(receiptId),
-                    success: function(response) {
-                        $(`<button id="tag-${receiptId}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receiptId})">${tag}</button>`)
+
+            var tagInput = document.getElementById("tag-input-" + receiptId);
+            var tag = tagInput.value;
+
+            $.ajaxSetup({
+                contentType: "application/json; charset=utf-8"
+            });
+
+            $.ajax({
+                url: api + "/tags/" + tag,
+                type: 'PUT',
+                data: JSON.stringify(receiptId),
+                success: function(response) {
+                    $(`<button id="tag-${receiptId}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receiptId})">${tag}</button>`)
                         .appendTo(document.getElementById("tags-" + receiptId));
 
-                       tagInput.remove();
+                    tagInput.remove();
+                }
+            })
+        }
+
+        function toggleTag(tag, receiptId) {
+            $.ajaxSetup({
+                contentType: "application/json; charset=utf-8"
+            });
+
+            $.ajax({
+                url: api + "/tags/" + tag,
+                type: 'PUT',
+                data: JSON.stringify(receiptId),
+                success: function(response) {
+                    document.getElementById("tag-" + receiptId + "-" + tag).remove();
+                }
+            })
+        }
+
+        function getReceipts() {
+            $.getJSON(api + "/receipts", function(receipts) {
+                for(var i=receipts.length - 1; i >= 0; i--) {
+                    var receipt = receipts[i];
+                    var tags = "";
+                    for(var index in receipt.tags) {
+                        var tag = receipt.tags[index];
+                        tags += `<button id="tag-${receipt.id}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receipt.id})">${tag}</button>`
                     }
-                })
-            }
-        
-            function toggleTag(tag, receiptId) {
-                $.ajaxSetup({
-                    contentType: "application/json; charset=utf-8"
-                });
-                        
-                $.ajax({
-                    url: api + "/tags/" + tag,
-                    type: 'PUT',
-                    data: JSON.stringify(receiptId),
-                    success: function(response) {
-                        document.getElementById("tag-" + receiptId + "-" + tag).remove();
-                    }
-                })
-            }
-        
-            function getReceipts() {
-                $.getJSON(api + "/receipts", function(receipts) {
-                    for(var i=receipts.length - 1; i >= 0; i--) {
-                        var receipt = receipts[i];
-                        var tags = "";
-                        for(var index in receipt.tags) {
-                            var tag = receipt.tags[index];
-                            tags += `<button id="tag-${receipt.id}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receipt.id})">${tag}</button>`
-                        }
-                      
+
                     $(`<div id="receipt-${receipt.id}", class="receipt">
                     <div class="time">${receipt.created}</div>
                     <div class="merchant">${receipt.merchant}</div>
@@ -193,15 +203,15 @@
                         ${tags}
                     </div>
                     </div>`).appendTo($("#receiptList"));
-                    }
-                })
-            }
-        
+                }
+            })
+        }
+
         function addReceipt() {
             var addMenu = document.getElementById("addMenu");
             addMenu.style.visibility = 'visible'
         }
-        
+
         function saveReceipt() {
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
@@ -213,7 +223,7 @@
 
             var data = JSON.stringify({ merchant: `${merchant}`, amount: `${amount}` });
             $.post(api + "/receipts", data, function(response) {
-               $(`<div id="receipt-${response}", class="receipt">
+                $(`<div id="receipt-${response}", class="receipt">
                  <div class="time">1s ago</div>
                  <div class="merchant">${merchant}</div>
                  <div class="amount">${amount}</div>
@@ -222,114 +232,114 @@
                  </div>
                  </div>`).prependTo($("#receiptList"));
 
-               addMenu.style.visibility = 'hidden'
+                addMenu.style.visibility = 'hidden'
 
-               document.getElementById("merchant").value = null;
-               document.getElementById("amount").value = null;
-           });
+                document.getElementById("merchant").value = null;
+                document.getElementById("amount").value = null;
+            });
         }
-        
+
         function cancelReceipt() {
             var addMenu = document.getElementById("addMenu");
             addMenu.style.visibility = 'hidden'
-            
+
             document.getElementById("merchant").value = null;
             document.getElementById("amount").value = null;
-            
+
             stopVideo();
         }
-        
-        </script>
-        <script>
-            var imageCapture;
-            var track;
-            
-            function attachMediaStream(mediaStream) {
-                $('video')[0].srcObject = mediaStream;
-                
-                // Saving the track allows us to capture a photo
-                track = mediaStream.getVideoTracks()[0];
-                imageCapture = new ImageCapture(track);
-            }
-        
-            function startVideo() {
-                document.getElementById("vidwrap").style.visibility = 'visible';
-                navigator.mediaDevices.getUserMedia({video: {facingMode: { exact: "environment" }}})
+
+    </script>
+    <script>
+        var imageCapture;
+        var track;
+
+        function attachMediaStream(mediaStream) {
+            $('video')[0].srcObject = mediaStream;
+
+            // Saving the track allows us to capture a photo
+            track = mediaStream.getVideoTracks()[0];
+            imageCapture = new ImageCapture(track);
+        }
+
+        function startVideo() {
+            document.getElementById("vidwrap").style.visibility = 'visible';
+            navigator.mediaDevices.getUserMedia({video: {facingMode: { exact: "environment" }}})
                 .then(attachMediaStream)
                 .catch(error => {
-                    navigator.mediaDevices.getUserMedia({video: { width: 200, height: 200 }})
-                    .then(attachMediaStream)
-                    .catch(error => {
-                        console.log('you are fooked');
-                    })
+                navigator.mediaDevices.getUserMedia({video: { width: 200, height: 200 }})
+                .then(attachMediaStream)
+                .catch(error => {
+                    console.log('you are fooked');
+                })
+            });
+        }
+
+        function stopVideo() {
+            track.stop();
+            document.getElementById("vidwrap").style.visibility = 'hidden';
+            document.getElementById("snapshot").disabled = true;
+        }
+
+        function takeSnapshot() {
+            // create a CANVAS element that is same size as the image
+            imageCapture.takePhoto()
+            .then(blob => createImageBitmap(blob))
+            .then(img => {
+                var canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                var data = canvas.toDataURL('image/png');
+                data = data.substring("data:image/png;base64,".length)
+
+                stopVideo();
+
+                $.ajaxSetup({
+                    contentType: "text/plain"
                 });
-            }
-        
-            function stopVideo() {
-                track.stop();
-                document.getElementById("vidwrap").style.visibility = 'hidden';
-            }
-        
-            function takeSnapshot() {
-                // create a CANVAS element that is same size as the image
-                imageCapture.takePhoto()
-                .then(blob => createImageBitmap(blob))
-                .then(img => {
-                    var canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
 
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    var data = canvas.toDataURL('image/png');
-                    data = data.substring("data:image/png;base64,".length)
-
-                    stopVideo();
-
-                    $.ajaxSetup({
-                        contentType: "text/plain"
-                    });
-
-                    $.post(api + "/images", data, function(response) {
-                        document.getElementById("merchant").value = response.merchantName;
-                        document.getElementById("amount").value = response.amount;
-                    });
+                $.post(api + "/images", data, function(response) {
+                    document.getElementById("merchant").value = response.merchantName;
+                    document.getElementById("amount").value = response.amount;
                 });
-            }
-        
-            $(function() {
-                $('#start').on('click', startVideo);
-                $('#take-pic-cancel').on('click', cancelReceipt);
-                $('video').on('play', () => $('#snapshot').prop('disabled', false));
-                $('#snapshot').on('click', takeSnapshot);
-            })
+            });
+        }
+
+        $(function() {
+            $('#start-camera').on('click', startVideo);
+            $('#take-pic-cancel').on('click', cancelReceipt);
+            $('video').on('play', () => $('#snapshot').prop('disabled', false));
+            $('#snapshot').on('click', takeSnapshot);
+        })
     </script>
-    </head>
-    
-    <body>
-        <DIV id="container">
-            <h1>My receipts</h1>
-            <button id="add-receipt" onClick="addReceipt()">+</button>
-            <div id="addMenu">
-                <button id="start">Start Video</button>
-                <button id="take-pic-cancel">Stop Video</button>
-                <div id="vidwrap">
-                    <video autoplay></video>
-                </div>
-                <button id="snapshot" disabled="true">Take a Snapshot!</button>
-                <input id="merchant" placeholder="merchant"/>
-                <input id="amount" placeholder="amount"/>
-                <button id="save-receipt" onClick="saveReceipt()">Save</button>
-                <button id="cancel-receipt" onClick="cancelReceipt()">Cancel</button>
-            </div>
-            <div id="receiptListHeader">
-                <h2>Time</h2>
-                <h2>Merchant</h2>
-                <h2>$</h2>
-                <h2>Tags</h2>
-            </div>
-            <div id="receiptList"></div>
-        </DIV>
-    </body>
-    
-</html>
+</head>
 
+<body>
+<DIV id="container">
+    <h1>My receipts</h1>
+    <button id="add-receipt" onClick="addReceipt()">+</button>
+    <button id="start-camera" onClick="addReceipt()">Video</button>
+    <div id="addMenu">
+        <div id="vidwrap">
+            <video autoplay></video>
+        </div>
+        <button id="take-pic-cancel">Stop Video</button>
+        <button id="snapshot" disabled="true">Take a Snapshot!</button>
+        <input id="merchant" placeholder="merchant"/>
+        <input id="amount" placeholder="amount"/>
+        <button id="save-receipt" onClick="saveReceipt()">Save</button>
+        <button id="cancel-receipt" onClick="cancelReceipt()">Cancel</button>
+    </div>
+    <div id="receiptListHeader">
+        <h2>Time</h2>
+        <h2>Merchant</h2>
+        <h2>$</h2>
+        <h2>Tags</h2>
+    </div>
+    <div id="receiptList"></div>
+</DIV>
+</body>
+
+</html>
