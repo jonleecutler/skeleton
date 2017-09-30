@@ -120,6 +120,8 @@
 
     </style>
     <script>
+        const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
+
         // This is the idiomatic way to ensure that JQuery does not
         // execute until the page has loaded
         $(function(){
@@ -128,15 +130,13 @@
 
         function addTag(receiptId) {
             $(`<input id="tag-input-${receiptId}", class="tag_input" onkeyup="saveTag(event, ${receiptId})", placeholder="tag"/>`)
-            .appendTo(document.getElementById("receipt-" + receiptId));
+                .appendTo(document.getElementById("receipt-" + receiptId));
         }
 
         function saveTag(e, receiptId) {
-            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-            
             e.which = e.which || e.keyCode;
             if(e.which != 13) {
-              return;
+                return;
             }
 
             var tagInput = document.getElementById("tag-input-" + receiptId);
@@ -152,16 +152,14 @@
                 data: JSON.stringify(receiptId),
                 success: function(response) {
                     $(`<button id="tag-${receiptId}-${tag}", class="tagValue", onClick="toggleTag(\'${tag}\', ${receiptId})">${tag}</button>`)
-                    .appendTo(document.getElementById("tags-" + receiptId));
-                    
+                        .appendTo(document.getElementById("tags-" + receiptId));
+
                     tagInput.remove();
                 }
             })
         }
 
         function toggleTag(tag, receiptId) {
-            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
             });
@@ -177,8 +175,6 @@
         }
 
         function getReceipts() {
-            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-            
             $.getJSON(api + "/receipts", function(receipts){
                 for(var i=receipts.length - 1; i >= 0; i--) {
                     var receipt = receipts[i];
@@ -207,8 +203,6 @@
         }
 
         function saveReceipt() {
-            const api = "http://ec2-18-221-140-92.us-east-2.compute.amazonaws.com";
-            
             $.ajaxSetup({
                 contentType: "application/json; charset=utf-8"
             });
@@ -241,8 +235,73 @@
 
             document.getElementById("merchant").value = null;
             document.getElementById("amount").value = null;
+            
+            stopVideo();
         }
 
+    </script>
+    <script>
+        var imageCapture;
+        var track;
+
+        function attachMediaStream(mediaStream) {
+            $('video')[0].srcObject = mediaStream;
+
+            // Saving the track allows us to capture a photo
+            track = mediaStream.getVideoTracks()[0];
+            imageCapture = new ImageCapture(track);
+        }
+
+        function startVideo() {
+            document.getElementById("vidwrap").style.visibility = 'visible';
+            navigator.mediaDevices.getUserMedia({video: {facingMode: { exact: "environment" }}})
+                .then(attachMediaStream)
+                .catch(error => {
+                navigator.mediaDevices.getUserMedia({video: { width: 200, height: 200 }})
+                .then(attachMediaStream)
+                .catch(error => {
+                    console.log('you are fooked');
+                })
+            });
+        }
+
+        function stopVideo() {
+            track.stop();
+            document.getElementById("vidwrap").style.visibility = 'hidden';
+        }
+
+        function takeSnapshot() {
+            // create a CANVAS element that is same size as the image
+            imageCapture.takePhoto()
+                .then(blob => createImageBitmap(blob))
+        .then(img => {
+                var canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            var data = canvas.toDataURL('image/png');
+            data = data.substring("data:image/png;base64,".length)
+
+            stopVideo();
+
+            $.ajaxSetup({
+                contentType: "text/plain"
+            });
+
+            $.post(api + "/images", data, function(response) {
+                document.getElementById("merchant").value = response.merchantName;
+                document.getElementById("amount").value = response.amount;
+            });
+        });
+        }
+
+        $(function() {
+            $('#start').on('click', startVideo);
+            $('#take-pic-cancel').on('click', cancelReceipt);
+            $('video').on('play', () => $('#snapshot').prop('disabled', false));
+            $('#snapshot').on('click', takeSnapshot);
+        })
     </script>
 </head>
 
@@ -251,6 +310,12 @@
     <h1>My receipts</h1>
     <button id="add-receipt" onClick="addReceipt()">+</button>
     <div id="addMenu">
+        <button id="start">Start Video</button>
+        <button id="take-pic-cancel">Stop Video</button>
+        <div id="vidwrap">
+            <video autoplay></video>
+        </div>
+        <button id="snapshot" disabled="true">Take a Snapshot!</button>
         <input id="merchant" placeholder="merchant"/>
         <input id="amount" placeholder="amount"/>
         <button id="save-receipt" onClick="saveReceipt()">Save</button>

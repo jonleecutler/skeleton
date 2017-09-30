@@ -45,8 +45,8 @@ public class ReceiptImageController {
             BatchAnnotateImagesResponse responses = client.batchAnnotateImages(Collections.singletonList(request));
             AnnotateImageResponse res = responses.getResponses(0);
 
-            String merchantName = null;
-            BigDecimal amount = null;
+            String merchantName = "Parsed Merchant Name";
+            BigDecimal amount = new BigDecimal(10);
 
             // Your Algo Here!!
             // Sort text annotations by bounding polygon.  Top-most non-decimal text is the merchant
