@@ -278,7 +278,7 @@
         function stopVideo() {
             track.stop();
             document.getElementById("vidwrap").style.visibility = 'hidden';
-            document.getElementById("snapshot").disabled = true;
+            document.getElementById("take-pic").disabled = true;
         }
 
         function takeSnapshot() {
@@ -310,8 +310,8 @@
         $(function() {
             $('#start-camera').on('click', startVideo);
             $('#take-pic-cancel').on('click', cancelReceipt);
-            $('video').on('play', () => $('#snapshot').prop('disabled', false));
-            $('#snapshot').on('click', takeSnapshot);
+            $('video').on('play', () => $('#take-pic').prop('disabled', false));
+            $('#take-pic').on('click', takeSnapshot);
         })
     </script>
 </head>
@@ -326,7 +326,7 @@
             <video autoplay></video>
         </div>
         <button id="take-pic-cancel">Stop Video</button>
-        <button id="snapshot" disabled="true">Take a Snapshot!</button>
+        <button id="take-pic" disabled="true">Take a Snapshot!</button>
         <input id="merchant" placeholder="merchant"/>
         <input id="amount" placeholder="amount"/>
         <button id="save-receipt" onClick="saveReceipt()">Save</button>
