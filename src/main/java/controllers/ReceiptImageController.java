@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -18,12 +20,13 @@ import static java.lang.System.out;
 @Produces(MediaType.APPLICATION_JSON)
 public class ReceiptImageController {
     private final AnnotateImageRequest.Builder requestBuilder;
+    private final Pattern amountPattern;
 
     public ReceiptImageController() {
         // DOCUMENT_TEXT_DETECTION is not the best or only OCR method available
         Feature ocrFeature = Feature.newBuilder().setType(Feature.Type.TEXT_DETECTION).build();
         this.requestBuilder = AnnotateImageRequest.newBuilder().addFeatures(ocrFeature);
-
+        this.amountPattern = Pattern.compile("^([0-9])+[.]([0-9])+$");
     }
 
     /**
@@ -54,11 +57,17 @@ public class ReceiptImageController {
             List<EntityAnnotation> annotations = res.getTextAnnotationsList();
             if (annotations.size() > 0) {
                 String text = res.getTextAnnotationsList().get(0).getDescription();
-                String[] values = text.split(System.getProperty("line.separator"));
-                String[] lastLineValues = values[values.length - 1].split(" ");
+                merchantName = text.split(System.getProperty("line.separator"))[0];
+            }
 
-                merchantName = values[0];
-                amount = new BigDecimal(lastLineValues[lastLineValues.length - 1]);
+            for (EntityAnnotation annotation : annotations)
+            {
+                String value = annotation.getDescription();
+                Matcher match = amountPattern.matcher(value);
+                if (match.find())
+                {
+                    amount = new BigDecimal(value);
+                }
             }
 
             //TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
